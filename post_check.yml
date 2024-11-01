@@ -1,0 +1,15 @@
+---
+- name: Post-Upgrade Connectivity Check
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Ping 8.8.8.8
+      wait_for:
+        host: 8.8.8.8
+        port: 80
+        timeout: 10
+    - name: Ping 172.17.12.4
+      wait_for:
+        host: 172.17.12.4
+        port: 80
+        timeout: 10

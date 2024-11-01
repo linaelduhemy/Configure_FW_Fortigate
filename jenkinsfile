@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+    parameters {
+        string(name: 'GIT_REPO', defaultValue: 'https://github.com/your-username/your-repo.git', description: 'GitHub repository URL containing playbooks')
+        string(name: 'Rule_Name', defaultValue: 'NetDevOPS2', description: 'Firewall rule name')
+        string(name: 'Source_IP', defaultValue: '192.168.0.1', description: 'Source IP address')
+        string(name: 'Destination_IP', defaultValue: '192.168.0.2', description: 'Destination IP address')
+        string(name: 'Service_Port', defaultValue: '4434', description: 'Service port')
+        choice(name: 'Action', choices: ['accept', 'deny'], description: 'Firewall action')
+        string(name: 'ansible_username', defaultValue: 'sgwb', description: 'Fortigate username')
+        password(name: 'ansible_password', defaultValue: '', description: 'Fortigate password')
+    }
+    stages {
+
+        stage('Clone Repository') {
+            steps {
+                git url: "${params.GIT_REPO}"
+            }
+        }
+
+        stage('Run Ansible Playbook') {
+            steps {
+                script {
+                    def inventoryFile = "inventory"
+                    def playbookFile = "add_variable_rule.yml"
+                    sh """
+                    ansible-playbook -i ${inventoryFile} ${playbookFile} \
+                        -e "Rule_Name=${params.Rule_Name}" \
+                        -e "Source_IP=${params.Source_IP}" \
+                        -e "Destination_IP=${params.Destination_IP}" \
+                        -e "Service_Port=${params.Service_Port}" \
+                        -e "Action=${params.Action}" \
+                        -e "ansible_username=${params.ansible_username}" \
+                        -e "ansible_password=${params.ansible_password}"
+                    """
+                }
+            }
+        }
+
+        stage('Upgrade Firewall') {
+            steps {
+                ansiblePlaybook credentialsId: 'fortigate_creds', playbook: 'fw_upgrade.yml'
+            }
+        }
+        stage('Post-Upgrade Check') {
+            steps {
+                ansiblePlaybook credentialsId: 'fortigate_creds', playbook: 'post_check.yml'
+            }
+        }
+    }
+}

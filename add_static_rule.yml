@@ -1,0 +1,35 @@
+---
+- name: Add Static Firewall Rule
+  hosts: fortigate
+  gather_facts: no
+  tasks:
+  - name: Add firewall policy
+    fortios_firewall_policy:
+        #host: "20.168.221.15"
+        #username: "sgwb"
+        #password: "P@ssw0rd@1234"
+        vdom: "root"
+        #https: true
+        state: "present"
+        firewall_policy:
+          srcintf:
+            -
+              name: "Loopback_D1"
+          srcaddr:
+            -
+              name: "NetdevopsIP"
+          dstintf:
+            -
+              name: "port1"
+          dstaddr:
+            -
+              name: "NetDevOPSIP2"
+          schedule: "always"
+          service:
+            -
+              name: "ALL"
+          action: "accept"
+          nat: "enable"
+          #status: "enable"
+          policyid: "8"
+          name: "Netdevops"
