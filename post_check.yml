@@ -1,6 +1,6 @@
 ---
 - name: Post-Upgrade Connectivity Check
-  hosts: localhost
+  hosts: fortigate
   gather_facts: no
   tasks:
     - name: Ping 8.8.8.8
