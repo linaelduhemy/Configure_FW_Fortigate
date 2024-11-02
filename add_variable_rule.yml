@@ -1,0 +1,69 @@
+---
+- name: Add Variable-Based Firewall Rule
+  hosts: fortigate
+  gather_facts: no
+  vars:
+    rule_name: "{{ Rule_Name }}"
+    src_ip: "{{ Source_IP }}"
+    dst_ip: "{{ Destination_IP }}"
+    service_port: "{{ Service_Port }}"
+    firewall_action: "{{ Action }}"
+  tasks:
+  - name: Create source IP address object if it doesn't exist
+    fortios_firewall_address:
+      vdom: "root"
+      state: "present"
+      firewall_address:
+        name: "{{ src_ip }}"
+        subnet: "{{ src_ip }}/32"
+
+  - name: Create destination IP address object if it doesn't exist
+    fortios_firewall_address:
+      vdom: "root"
+      state: "present"
+      firewall_address:
+        name: "{{ dst_ip }}"
+        subnet: "{{ dst_ip }}/32"
+
+  - name: Create custom service object for specified port
+    fortios_firewall_service_custom:
+      vdom: "root"
+      state: "present"
+      firewall_service_custom:
+        name: "Custom_Port_4434"
+        protocol: "TCP/UDP/UDP-Lite/SCTP"  # Specify protocol, e.g., "TCP" or "UDP" based on requirements
+        tcp_portrange: "{{ service_port }}"  # If TCP, otherwise use `udp_portrange`
+    ignore_errors: yes  # Allows playbook to continue even if this task fails for further troubleshooting
+
+  - name: Add firewall policy with variables
+    fortios_firewall_policy:
+      #host: "20.168.221.15"
+      #username: "sgwb"
+      #password: "P@ssw0rd@1234"
+      vdom: "root"
+      #https: true
+      state: "present"
+      firewall_policy:
+        srcintf:
+          -
+            name: "Loopback_D1"
+        srcaddr:
+          -
+            name: "{{ src_ip }}"
+        dstintf:
+          -
+            name: "port1"
+        dstaddr:
+          -
+            name: "{{ dst_ip }}"
+        schedule: "always"
+        service:
+          -
+            name: "{{ service_port }}"
+        action: "{{ firewall_action | lower }}"
+        nat: "enable"
+        #status: "enable"
+        policyid: "9"
+        name: "{{ rule_name }}"
+
+
