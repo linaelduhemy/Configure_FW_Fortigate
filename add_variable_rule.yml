@@ -37,9 +37,6 @@
 
   - name: Add firewall policy with variables
     fortios_firewall_policy:
-      #host: "20.168.221.15"
-      #username: "sgwb"
-      #password: "P@ssw0rd@1234"
       vdom: "root"
       #https: true
       state: "present"
